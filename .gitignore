@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# Config & secrets
+.env
+
+# Data cache
+data/*.docx
+data/schedule_latest.docx
+
+# Temp / test
+*.bin
+*.html
+*.txt
+c1.docx
+check_folders.py
+week_test.py
+parse_test.py
+rz263_detailed.json
+parsed_week_test.json

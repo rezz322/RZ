@@ -1,0 +1,236 @@
+{
+  "group": "РЗ-263",
+  "updated_at": "2026-09-06 23:31:59",
+  "file_id": "1cBPGEWQGnA_eGwmPmDPnwyBz03F3m0H5",
+  "days": {
+    "ПОНЕДІЛОК": {
+      "2": [
+        {
+          "start_week": 1,
+          "end_week": 15,
+          "parity": "all",
+          "type": " лекція",
+          "subject": "Вища математика",
+          "teacher": "Св. Сікіраш Ю.Є.",
+          "additional": "",
+          "urls": [
+            "https://us04web.zoom.us/j/8944225620?pwd=K3BudEVIZEJXWFBsMGUxWWZYbUpVQT09"
+          ],
+          "meeting_id": null,
+          "passcode": "7SGuR7",
+          "raw_text": "Вища математика\nСв. Сікіраш Ю.Є.\nhttps://us04web.zoom.us/j/8944225620?pwd=K3BudEVIZEJXWFBsMGUxWWZYbUpVQT09\nІдентифікатор конференції   8944225620    Код конференції 7SGuR7"
+        }
+      ],
+      "3": [
+        {
+          "start_week": 1,
+          "end_week": 15,
+          "parity": "all",
+          "type": " практика",
+          "subject": "Вища математика",
+          "teacher": "Св. Сікіраш Ю.Є.",
+          "additional": "8944225620",
+          "urls": [
+            "https://us04web.zoom.us/j/8944225620?pwd=K3BudEVIZEJXWFBsMGUxWWZYbUpVQT09"
+          ],
+          "meeting_id": null,
+          "passcode": "7SGuR7",
+          "raw_text": "Вища математика\nСв. Сікіраш Ю.Є. https://us04web.zoom.us/j/8944225620?pwd=K3BudEVIZEJXWFBsMGUxWWZYbUpVQT09\nІдентифікатор конференції\n8944225620\nКод конференції 7SGuR7"
+        }
+      ]
+    },
+    "ВІВТОРОК": {
+      "1": [
+        {
+          "start_week": 1,
+          "end_week": 15,
+          "parity": "all",
+          "type": " практика",
+          "subject": "Іноземна мова",
+          "teacher": "Лисун Д.С. ст.викладач",
+          "additional": "Цапенко Л. Ю. доцент",
+          "urls": [
+            "https://us05web.zoom.us/j/3542899029?pwd=7iIW9hcouABwbSd7D33vcPJxcqEFqN.1",
+            "https://meet.google.com/hok-khmm-hhu"
+          ],
+          "meeting_id": null,
+          "passcode": null,
+          "raw_text": "Іноземна мова\nЛисун Д.С. ст.викладач\nhttps://us05web.zoom.us/j/3542899029?pwd=7iIW9hcouABwbSd7D33vcPJxcqEFqN.1\nЦапенко Л. Ю. доцент\nhttps://meet.google.com/hok-khmm-hhu"
+        }
+      ],
+      "2": [
+        {
+          "start_week": 1,
+          "end_week": 15,
+          "parity": "all",
+          "type": "",
+          "subject": "Основи нормативно-правового заб. кібербезпеки та захисту інформації.",
+          "teacher": "Доц. Озернюк Г.В.",
+          "additional": "",
+          "urls": [
+            "https://meet.google.com/kkq-xhpc-etn"
+          ],
+          "meeting_id": null,
+          "passcode": null,
+          "raw_text": "Основи нормативно-правового заб. кібербезпеки та захисту інформації.\nДоц. Озернюк Г.В. https://meet.google.com/kkq-xhpc-etn"
+        }
+      ],
+      "3": [
+        {
+          "start_week": 3,
+          "end_week": 15,
+          "parity": "odd",
+          "type": "н/пар лаб.",
+          "subject": "Вступ до спеціальності",
+          "teacher": "ств. Вінковська І.С.",
+          "additional": "",
+          "urls": [
+            "https://meet.google.com/yeh-bezk-gbi"
+          ],
+          "meeting_id": null,
+          "passcode": null,
+          "raw_text": "Вступ до спеціальності\nств. Вінковська І.С.  https://meet.google.com/yeh-bezk-gbi"
+        }
+      ]
+    },
+    "СЕРЕДА": {
+      "1": [
+        {
+          "start_week": 1,
+          "end_week": 15,
+          "parity": "all",
+          "type": " лекція",
+          "subject": "Алгоритмізація та програмування",
+          "teacher": "Св. Головачова О.В.",
+          "additional": "Конференція Zoom",
+          "urls": [],
+          "meeting_id": "378 080 0730",
+          "passcode": "4T6Tq2",
+          "raw_text": "Алгоритмізація та програмування\nСв. Головачова О.В.\nКонференція Zoom\n№: 378 080 0730      Код доступа: 4T6Tq2"
+        }
+      ],
+      "2": [
+        {
+          "start_week": 1,
+          "end_week": 15,
+          "parity": "all",
+          "type": " Лекція",
+          "subject": "Вступ до спеціальності",
+          "teacher": "Доц. Тимошенко Л.М.",
+          "additional": "",
+          "urls": [
+            "https://meet.google.com/kwe-hzwh-wdg"
+          ],
+          "meeting_id": null,
+          "passcode": null,
+          "raw_text": "Вступ до спеціальності\nДоц. Тимошенко Л.М.\nhttps://meet.google.com/kwe-hzwh-wdg"
+        }
+      ],
+      "3": [
+        {
+          "start_week": 1,
+          "end_week": 15,
+          "parity": "odd",
+          "type": "н/пар. практика",
+          "subject": "Алгоритмізація та програмування",
+          "teacher": "Св. Головачова О.В.",
+          "additional": "Конференція Zoom\n№: 378 080 0730",
+          "urls": [],
+          "meeting_id": "378 080 0730",
+          "passcode": "4T6Tq2",
+          "raw_text": "Алгоритмізація та програмування\nСв. Головачова О.В.\nКонференція Zoom\n№: 378 080 0730\nКод доступа: 4T6Tq2"
+        },
+        {
+          "start_week": 2,
+          "end_week": 14,
+          "parity": "even",
+          "type": "пар. лаб.",
+          "subject": "Алгоритмізація та програмування",
+          "teacher": "Св. Головачова О.В.",
+          "additional": "Конференція Zoom\n№: 378 080 0730",
+          "urls": [],
+          "meeting_id": "378 080 0730",
+          "passcode": "4T6Tq2",
+          "raw_text": "Алгоритмізація та програмування\nСв. Головачова О.В.\nКонференція Zoom\n№: 378 080 0730\nКод доступа: 4T6Tq2"
+        }
+      ],
+      "4": [
+        {
+          "start_week": 2,
+          "end_week": 14,
+          "parity": "even",
+          "type": "пар практика",
+          "subject": "Історія України та української культури",
+          "teacher": "доц. Мельник О.В.",
+          "additional": "",
+          "urls": [],
+          "meeting_id": null,
+          "passcode": null,
+          "raw_text": "Історія України та української культури\nдоц. Мельник О.В."
+        }
+      ]
+    },
+    "ЧЕТВЕР": {
+      "1": [
+        {
+          "start_week": 1,
+          "end_week": 15,
+          "parity": "all",
+          "type": "",
+          "subject": "Фізичне виховання",
+          "teacher": "ст. викладач Вакарчук Вікторія Олександрівна(РТ, РМ-251)",
+          "additional": "Смолякова Ірина Дмитрівна:\nБєлова Тетяна Георгіївна:",
+          "urls": [
+            "https://classroom.google.com/c/ODAwOTkyNDM4NzI3?cjc=a7rijats",
+            "https://meet.google.com/uvx-ngha-smz",
+            "https://classroom.google.com/c/ODAxMDgzNDc4Mzky",
+            "https://meet.google.com/xzj-htce-oin",
+            "https://classroom.google.com/c/ODAxMzE4MzY4NDA3?cjc=tgh2reuk",
+            "https://meet.google.com/wtp-ogos-uir"
+          ],
+          "meeting_id": null,
+          "passcode": null,
+          "raw_text": "Фізичне виховання\nст. викладач Вакарчук Вікторія Олександрівна(РТ, РМ-251) https://classroom.google.com/c/ODAwOTkyNDM4NzI3?cjc=a7rijats\nhttps://meet.google.com/uvx-ngha-smz\nСмолякова Ірина Дмитрівна: https://classroom.google.com/c/ODAxMDgzNDc4Mzky\nhttps://meet.google.com/xzj-htce-oin\nБєлова Тетяна Георгіївна:https://classroom.google.com/c/ODAxMzE4MzY4NDA3?cjc=tgh2reuk\nhttps://meet.google.com/wtp-ogos-uir"
+        }
+      ],
+      "2": [
+        {
+          "start_week": 1,
+          "end_week": 15,
+          "parity": "all",
+          "type": " практика",
+          "subject": "Іноземна мова",
+          "teacher": "Лисун Д.С. ст.викладач",
+          "additional": "Цапенко Л. Ю. доцент\nПрисяжнюк О.Я.  доцент",
+          "urls": [
+            "https://us05web.zoom.us/j/3542899029?pwd=7iIW9hcouABwbSd7D33vcPJxcqEFqN.1",
+            "https://meet.google.com/hok-khmm-hhu"
+          ],
+          "meeting_id": null,
+          "passcode": null,
+          "raw_text": "Іноземна мова\nЛисун Д.С. ст.викладач\nhttps://us05web.zoom.us/j/3542899029?pwd=7iIW9hcouABwbSd7D33vcPJxcqEFqN.1\nЦапенко Л. Ю. доцент\nhttps://meet.google.com/hok-khmm-hhu\nПрисяжнюк О.Я.  доцент"
+        }
+      ]
+    },
+    "П’ЯТНИЦЯ": {
+      "2": [
+        {
+          "start_week": 2,
+          "end_week": 14,
+          "parity": "even",
+          "type": "пар практика",
+          "subject": "Основи нормативно-правового заб. кібербезпеки та захисту інформації",
+          "teacher": "Доц. Білоусов О.С.",
+          "additional": "",
+          "urls": [
+            "https://classroom.google.com/c/ODc2NDA3NzI2MTcw",
+            "https://meet.google.com/cmb-ddkd-hkw"
+          ],
+          "meeting_id": null,
+          "passcode": null,
+          "raw_text": "Основи нормативно-правового заб. кібербезпеки та захисту інформації\nДоц. Білоусов О.С. https://classroom.google.com/c/ODc2NDA3NzI2MTcw\nhttps://meet.google.com/cmb-ddkd-hkw"
+        }
+      ]
+    }
+  }
+}
