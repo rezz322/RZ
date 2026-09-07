@@ -1,3 +1,5 @@
+name: rz263
+
 services:
   mysql:
     image: mysql:8.0
