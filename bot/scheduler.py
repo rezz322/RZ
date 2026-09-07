@@ -139,30 +139,9 @@ async def lesson_alert_loop(bot: Bot):
 
 async def notify_schedule_update(bot: Bot, meta: dict):
     """
-    Розсилає сповіщення про оновлення файлу розкладу на Google Drive.
+    Розсилає сповіщення про оновлення файлу розкладу на Google Drive (вимкнено).
     """
-    subscribers = get_subscribers()
-    if not subscribers:
-        return
-
-    msg = format_schedule_update_alert_text(meta, GROUP_NAME)
-    for chat_id in subscribers:
-        try:
-            await bot.send_message(chat_id=chat_id, text=msg, parse_mode="HTML")
-            await asyncio.sleep(0.04)
-        except TelegramForbiddenError:
-            unregister_subscriber(chat_id)
-        except TelegramRetryAfter as e:
-            await asyncio.sleep(e.retry_after)
-            try:
-                await bot.send_message(chat_id=chat_id, text=msg, parse_mode="HTML")
-            except Exception:
-                pass
-        except TelegramBadRequest as e:
-            if "chat not found" in str(e).lower() or "deactivated" in str(e).lower():
-                unregister_subscriber(chat_id)
-        except Exception as e:
-            logger.warning(f"Failed to notify chat {chat_id}: {e}")
+    return
 
 async def schedule_monitor_loop(bot: Bot):
     """
@@ -178,7 +157,7 @@ async def schedule_monitor_loop(bot: Bot):
                 await download_and_parse_schedule(meta["file_id"])
                 save_schedule_meta(meta)
                 reload_cached_schedule()
-                await notify_schedule_update(bot, meta)
+                # Сповіщення про оновлення розкладу вимкнено
         except asyncio.CancelledError:
             logger.info("Schedule monitor loop cancelled.")
             break
