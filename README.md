@@ -30,6 +30,14 @@ GDRIVE_FOLDER_ID=1Jlt45-PyFNJjfbNw1UVHWQ9GxzT5xizo
 SEMESTER_START=2026-08-31
 CHECK_INTERVAL_SECONDS=1800
 ALERT_MINUTES_BEFORE=10
+
+# База даних MySQL
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_DATABASE=rz263_bot
+MYSQL_USER=rz_user
+MYSQL_PASSWORD=rz_password
+MYSQL_ROOT_PASSWORD=rz_root_password
 ```
 
 ---
@@ -37,8 +45,9 @@ ALERT_MINUTES_BEFORE=10
 ## 🚀 Запуск бота
 
 ### Спосіб 1: Через Docker (рекомендовано для сервера)
+Docker Compose автоматично запускає контейнер MySQL 8.0 та бота в спільній мережі з постійним збереженням даних:
 ```bash
-# Запуск у фоновому режимі
+# Запуск у фоновому режимі (MySQL + Bot)
 docker compose up -d --build
 
 # Перегляд логів
@@ -53,6 +62,7 @@ docker compose down
 pip install -r requirements.txt
 python main.py
 ```
+*(При відсутності активного локального сервера MySQL бот автоматично переходить у режим file-fallback на `data/subscribers.json` без аварійного завершення).*
 
 ### Тестовий парсинг без запуску бота в Telegram:
 ```bash
@@ -71,17 +81,20 @@ python main.py --test
 │   ├── templates.py        # Усі текстові шаблони та розклад дзвінків
 │   ├── utils.py            # Керування підписниками та in-memory кеш розкладу
 │   └── scheduler.py        # Фоновий моніторинг та нагадування про пари
+├── database/
+│   ├── __init__.py
+│   └── db.py               # Асинхронне підключення до MySQL (aiomysql)
 ├── parser/
 │   ├── monitor.py          # Перевірка змін у Google Drive
 │   └── schedule_parser.py  # Парсер DOCX розкладу у schedule.json
 ├── data/
 │   ├── schedule.json       # Кеш розкладу для групи РЗ-263
-│   └── subscribers.json    # Список підписників для сповіщень
+│   └── subscribers.json    # Резервний список підписників
 ├── Dockerfile              # Docker-образ із таймзоною Europe/Kyiv
-├── docker-compose.yml      # Compose з автоматичним монтуванням даних
+├── docker-compose.yml      # Compose: сервіси MySQL 8.0 та Bot
 ├── config.py               # Конфігурація проєкту
-├── main.py                 # Точка входу та запуск фонових процесів
-├── requirements.txt        # Список бібліотек
+├── main.py                 # Точка входу, ініціалізація БД та фонових процесів
+├── requirements.txt        # Список бібліотек (aiogram, aiomysql тощо)
 ├── .env.example            # Шаблон конфігурації
 └── README.md
 ```

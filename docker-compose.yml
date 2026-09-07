@@ -1,17 +1,45 @@
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: rz263_mysql
+    restart: unless-stopped
+    command: --default-authentication-plugin=caching_sha2_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rz_root_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-rz263_bot}
+      MYSQL_USER: ${MYSQL_USER:-rz_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-rz_password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD:-rz_root_password}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
   rz263-bot:
     build: .
     container_name: rz263_schedule_bot
     restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
     env_file:
       - .env
-    volumes:
-      # Зберігаємо кеш розкладу та базу підписників на хості
-      - ./data:/app/data
     environment:
       - TZ=Europe/Kyiv
+      - MYSQL_HOST=mysql
+    volumes:
+      # Зберігаємо бекап розкладу та файли на хості
+      - ./data:/app/data
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
+
+volumes:
+  mysql_data:

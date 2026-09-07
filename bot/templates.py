@@ -211,7 +211,7 @@ def format_lesson_alert_text(pair_num: str, time_info: dict, lessons: list[dict]
         msg.append(format_lesson_entry_html(l))
         msg.append("")
 
-    msg.append("🚀 <i>Гарної пари! Не забудьте підключитися вчасно.</i>")
+    msg.append("🚀 <i>Приєднуйтесь до пари!</i>")
     return "\n".join(msg).strip()
 
 def format_schedule_update_alert_text(meta: dict, group_name: str) -> str:
@@ -223,11 +223,11 @@ def format_schedule_update_alert_text(meta: dict, group_name: str) -> str:
         f"• Документ: <code>{meta.get('title', 'Новий розклад')}</code>\n"
         f"• Дата модифікації: <b>{meta.get('last_modified', 'щойно')}</b>\n"
         f"• Група: <b>{group_name}</b>\n\n"
-        f"Бот уже завантажив нову версію розкладу. Натисніть /start або скористайтесь кнопками навігації, щоб переглянути актуальні заняття!"
+        f"Бот уже завантажив нову версію розкладу!"
     )
 
 def format_no_schedule_text() -> str:
     """
     Повідомлення, коли розклад ще не завантажено.
     """
-    return "⚠️ Розклад ще завантажується або оновлюється. Зачекайте декілька секунд або скористайтеся командою /check."
+    return "⚠️ Розклад ще завантажується або оновлюється."

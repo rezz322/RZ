@@ -30,6 +30,14 @@ SEMESTER_START = os.getenv("SEMESTER_START", "2026-08-31")  # Понеділок
 CHECK_INTERVAL_SECONDS = int(os.getenv("CHECK_INTERVAL_SECONDS", "1800"))
 ALERT_MINUTES_BEFORE = int(os.getenv("ALERT_MINUTES_BEFORE", "10"))
 
+# MySQL Database settings
+MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
+MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
+MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", "rz263_bot")
+MYSQL_USER = os.getenv("MYSQL_USER", "rz_user")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "rz_password")
+MYSQL_ROOT_PASSWORD = os.getenv("MYSQL_ROOT_PASSWORD", "rz_root_password")
+
 SCHEDULE_FILE = DATA_DIR / "schedule.json"
 META_FILE = DATA_DIR / "meta.json"
 SUBSCRIBERS_FILE = DATA_DIR / "subscribers.json"

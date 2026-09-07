@@ -65,7 +65,12 @@ async def cmd_start_and_schedule(message: Message):
     """
     Миттєво показує розклад на сьогодні за 1 запит без зайвих мережевих затримок.
     """
-    register_subscriber(message.chat.id)
+    user = message.from_user
+    register_subscriber(
+        message.chat.id,
+        username=user.username if user else None,
+        full_name=user.full_name if user else None
+    )
     today = date.today()
     text, markup = await render_schedule_message(today)
     await message.answer(
@@ -80,7 +85,12 @@ async def cmd_old_button_cleanup(message: Message):
     """
     Обробник для старої клавіатури: показує розклад та прибирає збережену клавіатуру.
     """
-    register_subscriber(message.chat.id)
+    user = message.from_user
+    register_subscriber(
+        message.chat.id,
+        username=user.username if user else None,
+        full_name=user.full_name if user else None
+    )
     try:
         rm = await message.answer("🗓 Оновлення...", reply_markup=get_remove_keyboard())
         await rm.delete()

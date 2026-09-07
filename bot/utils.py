@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from config import SUBSCRIBERS_FILE
@@ -40,9 +41,17 @@ def reload_cached_schedule() -> dict | None:
 # Оперативний кеш списку підписників у пам'яті
 _SUBSCRIBERS_CACHE: set[int] | None = None
 
+def set_subscribers_cache(subscribers: list[int]) -> None:
+    """
+    Встановлює кеш підписників безпосередньо з бази даних.
+    """
+    global _SUBSCRIBERS_CACHE
+    _SUBSCRIBERS_CACHE = set(subscribers)
+    logger.info(f"Loaded {len(_SUBSCRIBERS_CACHE)} active subscribers into in-memory cache.")
+
 def get_subscribers() -> list[int]:
     """
-    Повертає список зареєстрованих підписників бота (з кешу або диску).
+    Повертає список зареєстрованих підписників бота (з кешу або диску/БД).
     """
     global _SUBSCRIBERS_CACHE
     if _SUBSCRIBERS_CACHE is None:
@@ -57,34 +66,81 @@ def get_subscribers() -> list[int]:
                 _SUBSCRIBERS_CACHE = set()
     return list(_SUBSCRIBERS_CACHE)
 
-def register_subscriber(chat_id: int) -> None:
+async def async_register_subscriber(
+    chat_id: int,
+    username: str | None = None,
+    full_name: str | None = None
+) -> None:
     """
-    Зберігає chat_id користувача. Якщо вже є в пам'яті — операція 0ms без читання диску.
+    Асинхронно зберігає підписника в MySQL та оновлює локальний кеш і бекап-файл.
     """
     global _SUBSCRIBERS_CACHE
     if _SUBSCRIBERS_CACHE is None:
         get_subscribers()
-    if chat_id not in _SUBSCRIBERS_CACHE:
-        _SUBSCRIBERS_CACHE.add(chat_id)
+    _SUBSCRIBERS_CACHE.add(chat_id)
+
+    from database.db import is_db_connected, register_subscriber_db
+    if is_db_connected():
+        await register_subscriber_db(chat_id, username, full_name)
+
+    try:
+        with open(SUBSCRIBERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(list(_SUBSCRIBERS_CACHE), f, indent=2)
+    except Exception as e:
+        logger.error(f"Failed to save subscriber backup {chat_id}: {e}")
+
+def register_subscriber(
+    chat_id: int,
+    username: str | None = None,
+    full_name: str | None = None
+) -> None:
+    """
+    Синхронна обгортка: миттєво додає в RAM та запускає фонове збереження в MySQL.
+    """
+    global _SUBSCRIBERS_CACHE
+    if _SUBSCRIBERS_CACHE is None:
+        get_subscribers()
+
+    need_persist = chat_id not in _SUBSCRIBERS_CACHE
+    _SUBSCRIBERS_CACHE.add(chat_id)
+
+    if need_persist:
         try:
-            with open(SUBSCRIBERS_FILE, "w", encoding="utf-8") as f:
-                json.dump(list(_SUBSCRIBERS_CACHE), f, indent=2)
-            logger.info(f"New subscriber registered: {chat_id}")
-        except Exception as e:
-            logger.error(f"Failed to save subscriber {chat_id}: {e}")
+            loop = asyncio.get_running_loop()
+            loop.create_task(async_register_subscriber(chat_id, username, full_name))
+        except RuntimeError:
+            asyncio.run(async_register_subscriber(chat_id, username, full_name))
+
+async def async_unregister_subscriber(chat_id: int) -> None:
+    """
+    Асинхронно позначає підписника неактивним в MySQL та видаляє з оперативного кешу.
+    """
+    global _SUBSCRIBERS_CACHE
+    if _SUBSCRIBERS_CACHE is None:
+        get_subscribers()
+    _SUBSCRIBERS_CACHE.discard(chat_id)
+
+    from database.db import is_db_connected, unregister_subscriber_db
+    if is_db_connected():
+        await unregister_subscriber_db(chat_id)
+
+    try:
+        with open(SUBSCRIBERS_FILE, "w", encoding="utf-8") as f:
+            json.dump(list(_SUBSCRIBERS_CACHE), f, indent=2)
+        logger.info(f"Subscriber removed: {chat_id}")
+    except Exception as e:
+        logger.error(f"Failed to remove subscriber {chat_id}: {e}")
 
 def unregister_subscriber(chat_id: int) -> None:
     """
-    Видаляє користувача зі списку підписників (наприклад, якщо бот заблоковано).
+    Синхронна обгортка для видалення користувача.
     """
     global _SUBSCRIBERS_CACHE
-    if _SUBSCRIBERS_CACHE is None:
-        get_subscribers()
-    if chat_id in _SUBSCRIBERS_CACHE:
-        _SUBSCRIBERS_CACHE.remove(chat_id)
-        try:
-            with open(SUBSCRIBERS_FILE, "w", encoding="utf-8") as f:
-                json.dump(list(_SUBSCRIBERS_CACHE), f, indent=2)
-            logger.info(f"Subscriber removed (blocked or inactive): {chat_id}")
-        except Exception as e:
-            logger.error(f"Failed to remove subscriber {chat_id}: {e}")
+    if _SUBSCRIBERS_CACHE is not None:
+        _SUBSCRIBERS_CACHE.discard(chat_id)
+
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(async_unregister_subscriber(chat_id))
+    except RuntimeError:
+        asyncio.run(async_unregister_subscriber(chat_id))
