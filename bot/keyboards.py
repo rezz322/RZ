@@ -1,61 +1,80 @@
+from datetime import date, timedelta
 from aiogram.types import (
-    ReplyKeyboardMarkup,
-    KeyboardButton,
+    ReplyKeyboardRemove,
     InlineKeyboardMarkup,
     InlineKeyboardButton
 )
 
-def get_main_keyboard() -> ReplyKeyboardMarkup:
+def get_remove_keyboard() -> ReplyKeyboardRemove:
     """
-    Returns main persistent reply keyboard with quick actions.
+    Видаляє будь-яку збережену нижню Reply-клавіатуру у клієнта.
     """
-    kb = [
-        [
-            KeyboardButton(text="📅 Сьогодні"),
-            KeyboardButton(text="📅 Завтра")
-        ],
-        [
-            KeyboardButton(text="🗓 Непарний тиждень (чисельник)"),
-            KeyboardButton(text="🗓 Парний тиждень (знаменник)")
-        ],
-        [
-            KeyboardButton(text="📆 Обрати день"),
-            KeyboardButton(text="ℹ️ Поточний тиждень")
-        ],
-        [
-            KeyboardButton(text="🔄 Оновити розклад")
-        ]
-    ]
-    return ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+    return ReplyKeyboardRemove()
 
-def get_days_inline_keyboard(prefix: str = "day") -> InlineKeyboardMarkup:
+def get_day_navigation_keyboard(target_date: date) -> InlineKeyboardMarkup:
     """
-    Returns inline buttons for Monday to Friday.
+    Генерує інлайн-навігацію розкладу:
+    - Стрілки: день назад / день вперед (з автоматичним пропуском вихідних).
+    - Кнопки робочих днів тижня (Пн - Пт) із позначкою активного дня.
+    - Кнопка повернення до сьогоднішнього дня.
     """
-    days = [
-        ("Пн", "ПОНЕДІЛОК"),
-        ("Вт", "ВІВТОРОК"),
-        ("Ср", "СЕРЕДА"),
-        ("Чт", "ЧЕТВЕР"),
-        ("Пт", "П’ЯТНИЦЯ")
-    ]
-    buttons = [
-        InlineKeyboardButton(text=label, callback_data=f"{prefix}:{day}")
-        for label, day in days
-    ]
-    return InlineKeyboardMarkup(inline_keyboard=[buttons])
+    weekday = target_date.weekday()
 
-def get_week_choice_inline_keyboard(day_name: str) -> InlineKeyboardMarkup:
-    """
-    Inline keyboard to choose parity for a specific day.
-    """
-    buttons = [
-        [
-            InlineKeyboardButton(text="🟢 Непарний (чисельник)", callback_data=f"showday:{day_name}:odd"),
-            InlineKeyboardButton(text="🔵 Парний (знаменник)", callback_data=f"showday:{day_name}:even")
-        ],
-        [
-            InlineKeyboardButton(text="📋 Всі пари на день", callback_data=f"showday:{day_name}:all")
-        ]
+    # Розрахунок переходів між робочими днями
+    if weekday == 0:  # Понеділок -> назад у п'ятницю минулого тижня
+        prev_date = target_date - timedelta(days=3)
+        next_date = target_date + timedelta(days=1)
+    elif weekday == 4:  # П'ятниця -> вперед у понеділок наступного тижня
+        prev_date = target_date - timedelta(days=1)
+        next_date = target_date + timedelta(days=3)
+    elif weekday == 5:  # Субота
+        prev_date = target_date - timedelta(days=1)
+        next_date = target_date + timedelta(days=2)
+    elif weekday == 6:  # Неділя
+        prev_date = target_date - timedelta(days=2)
+        next_date = target_date + timedelta(days=1)
+    else:  # Вівторок, Середа, Четвер
+        prev_date = target_date - timedelta(days=1)
+        next_date = target_date + timedelta(days=1)
+
+    # Рядок 1: Стрілки
+    row_arrows = [
+        InlineKeyboardButton(
+            text="⬅️ День назад",
+            callback_data=f"nav:{prev_date.isoformat()}"
+        ),
+        InlineKeyboardButton(
+            text="День вперед ➡️",
+            callback_data=f"nav:{next_date.isoformat()}"
+        )
     ]
-    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+    # Рядок 2: Кнопки днів тижня (Пн - Пт)
+    monday = target_date - timedelta(days=weekday if weekday < 5 else 0)
+    day_labels = ["Пн", "Вт", "Ср", "Чт", "Пт"]
+    row_days = []
+
+    for i, label in enumerate(day_labels):
+        day_date = monday + timedelta(days=i)
+        is_active = (day_date == target_date)
+        btn_text = f"• {label} •" if is_active else label
+        row_days.append(
+            InlineKeyboardButton(
+                text=btn_text,
+                callback_data="noop" if is_active else f"nav:{day_date.isoformat()}"
+            )
+        )
+
+    keyboard = [row_arrows, row_days]
+
+    # Рядок 3: Повернення до сьогодні
+    today = date.today()
+    if target_date != today:
+        keyboard.append([
+            InlineKeyboardButton(
+                text="📅 Повернутись до Сьогодні",
+                callback_data=f"nav:{today.isoformat()}"
+            )
+        ])
+
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)

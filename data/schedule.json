@@ -1,7 +1,7 @@
 {
   "group": "РЗ-263",
-  "updated_at": "2026-09-06 23:31:59",
-  "file_id": "1cBPGEWQGnA_eGwmPmDPnwyBz03F3m0H5",
+  "updated_at": "2026-09-07 10:03:20",
+  "file_id": "1s1FgYcCemG0cAY1PmbB_OytVkBCq1qco",
   "days": {
     "ПОНЕДІЛОК": {
       "2": [
@@ -63,7 +63,7 @@
           "start_week": 1,
           "end_week": 15,
           "parity": "all",
-          "type": "",
+          "type": " лекція",
           "subject": "Основи нормативно-правового заб. кібербезпеки та захисту інформації.",
           "teacher": "Доц. Озернюк Г.В.",
           "additional": "",
@@ -152,21 +152,6 @@
           "meeting_id": "378 080 0730",
           "passcode": "4T6Tq2",
           "raw_text": "Алгоритмізація та програмування\nСв. Головачова О.В.\nКонференція Zoom\n№: 378 080 0730\nКод доступа: 4T6Tq2"
-        }
-      ],
-      "4": [
-        {
-          "start_week": 2,
-          "end_week": 14,
-          "parity": "even",
-          "type": "пар практика",
-          "subject": "Історія України та української культури",
-          "teacher": "доц. Мельник О.В.",
-          "additional": "",
-          "urls": [],
-          "meeting_id": null,
-          "passcode": null,
-          "raw_text": "Історія України та української культури\nдоц. Мельник О.В."
         }
       ]
     },

@@ -1,11 +1,12 @@
 import asyncio
-import json
 import logging
+from datetime import datetime, timedelta
 from aiogram import Bot
+from aiogram.exceptions import TelegramForbiddenError, TelegramRetryAfter, TelegramBadRequest
 
 from config import (
     CHECK_INTERVAL_SECONDS,
-    SUBSCRIBERS_FILE,
+    ALERT_MINUTES_BEFORE,
     GROUP_NAME
 )
 from parser.monitor import (
@@ -13,42 +14,159 @@ from parser.monitor import (
     has_schedule_changed,
     save_schedule_meta
 )
-from parser.schedule_parser import download_and_parse_schedule
+from parser.schedule_parser import (
+    get_academic_week_info,
+    filter_lessons_for_week,
+    download_and_parse_schedule
+)
+from bot.templates import (
+    format_lesson_alert_text,
+    format_schedule_update_alert_text
+)
+from bot.utils import (
+    get_cached_schedule,
+    reload_cached_schedule,
+    get_subscribers,
+    unregister_subscriber
+)
 
 logger = logging.getLogger(__name__)
 
-async def notify_subscribers(bot: Bot, meta: dict):
+LESSON_TIMES = [
+    {"pair": "1", "start": "08:00", "end": "09:35"},
+    {"pair": "2", "start": "09:50", "end": "11:25"},
+    {"pair": "3", "start": "11:40", "end": "13:15"},
+    {"pair": "4", "start": "13:30", "end": "15:05"},
+    {"pair": "5", "start": "15:20", "end": "16:55"}
+]
+
+async def broadcast_lesson_alert(bot: Bot, pair_num: str, time_info: dict, lessons: list[dict]):
     """
-    Broadcasts notification to all registered users when schedule is updated.
+    Розсилає сповіщення про початок пари всім підписникам.
     """
-    if not SUBSCRIBERS_FILE.exists():
+    subscribers = get_subscribers()
+    if not subscribers:
         return
-        
-    try:
-        with open(SUBSCRIBERS_FILE, "r", encoding="utf-8") as f:
-            subscribers = json.load(f)
-    except Exception as e:
-        logger.error(f"Failed to read subscribers: {e}")
+
+    text = format_lesson_alert_text(pair_num, time_info, lessons, ALERT_MINUTES_BEFORE)
+    logger.info(f"Broadcasting lesson alert for pair {pair_num} to {len(subscribers)} subscribers...")
+
+    for chat_id in subscribers:
+        try:
+            await bot.send_message(
+                chat_id=chat_id,
+                text=text,
+                parse_mode="HTML",
+                disable_web_page_preview=True
+            )
+            await asyncio.sleep(0.04)
+        except TelegramForbiddenError:
+            logger.info(f"User {chat_id} blocked the bot, removing from subscribers.")
+            unregister_subscriber(chat_id)
+        except TelegramRetryAfter as e:
+            logger.warning(f"Telegram rate limit hit, waiting {e.retry_after}s...")
+            await asyncio.sleep(e.retry_after)
+            try:
+                await bot.send_message(chat_id=chat_id, text=text, parse_mode="HTML", disable_web_page_preview=True)
+            except Exception:
+                pass
+        except TelegramBadRequest as e:
+            if "chat not found" in str(e).lower() or "deactivated" in str(e).lower():
+                unregister_subscriber(chat_id)
+            else:
+                logger.warning(f"BadRequest sending alert to {chat_id}: {e}")
+        except Exception as e:
+            logger.warning(f"Failed to send lesson alert to chat {chat_id}: {e}")
+
+async def lesson_alert_loop(bot: Bot):
+    """
+    Фоновий цикл перевірки початку пар та надсилання нагадувань усім студентам за 10 хвилин.
+    """
+    logger.info(f"Starting lesson alert loop (alerts ~{ALERT_MINUTES_BEFORE}m before pair)...")
+    sent_alerts = set()
+
+    while True:
+        try:
+            await asyncio.sleep(30)
+            now = datetime.now()
+            today = now.date()
+            today_str = today.strftime("%Y-%m-%d")
+
+            # Очищуємо історію попередніх днів
+            sent_alerts = {item for item in sent_alerts if item[0] == today_str}
+
+            # Пропускаємо вихідні дні (субота = 5, неділя = 6)
+            if today.weekday() >= 5:
+                continue
+
+            schedule = get_cached_schedule()
+            if not schedule:
+                continue
+
+            week_info = get_academic_week_info(today)
+            day_name = week_info["day_name"]
+            day_pairs = schedule.get("days", {}).get(day_name, {})
+
+            for item in LESSON_TIMES:
+                pair_num = item["pair"]
+                if (today_str, pair_num) in sent_alerts:
+                    continue
+
+                raw_lessons = day_pairs.get(pair_num, [])
+                active_lessons = filter_lessons_for_week(
+                    raw_lessons,
+                    week_info["week_number"],
+                    week_info["parity"]
+                )
+                if not active_lessons:
+                    continue
+
+                start_h, start_m = map(int, item["start"].split(":"))
+                start_dt = now.replace(hour=start_h, minute=start_m, second=0, microsecond=0)
+                alert_dt = start_dt - timedelta(minutes=ALERT_MINUTES_BEFORE)
+
+                if alert_dt <= now < start_dt:
+                    logger.info(f"Triggering lesson alert for pair {pair_num} on {today_str}")
+                    sent_alerts.add((today_str, pair_num))
+                    await broadcast_lesson_alert(bot, pair_num, item, active_lessons)
+
+        except asyncio.CancelledError:
+            logger.info("Lesson alert loop cancelled.")
+            break
+        except Exception as e:
+            logger.error(f"Error in lesson alert loop: {e}", exc_info=True)
+            await asyncio.sleep(10)
+
+async def notify_schedule_update(bot: Bot, meta: dict):
+    """
+    Розсилає сповіщення про оновлення файлу розкладу на Google Drive.
+    """
+    subscribers = get_subscribers()
+    if not subscribers:
         return
-        
-    msg = (
-        f"🔔 <b>УВАГА! РОЗКЛАД ОНОВЛЕНО НА САЙТІ ФАКУЛЬТЕТУ!</b>\n\n"
-        f"• Документ: <code>{meta.get('title', 'Новий розклад')}</code>\n"
-        f"• Дата модифікації: <b>{meta.get('last_modified', 'щойно')}</b>\n"
-        f"• Група: <b>{GROUP_NAME}</b>\n\n"
-        f"Бот уже завантажив нову версію розкладу. Натисніть <b>📅 Сьогодні</b> або <b>🗓 Розклад</b>, щоб переглянути актуальні заняття!"
-    )
-    
+
+    msg = format_schedule_update_alert_text(meta, GROUP_NAME)
     for chat_id in subscribers:
         try:
             await bot.send_message(chat_id=chat_id, text=msg, parse_mode="HTML")
-            await asyncio.sleep(0.05)  # rate limit precaution
+            await asyncio.sleep(0.04)
+        except TelegramForbiddenError:
+            unregister_subscriber(chat_id)
+        except TelegramRetryAfter as e:
+            await asyncio.sleep(e.retry_after)
+            try:
+                await bot.send_message(chat_id=chat_id, text=msg, parse_mode="HTML")
+            except Exception:
+                pass
+        except TelegramBadRequest as e:
+            if "chat not found" in str(e).lower() or "deactivated" in str(e).lower():
+                unregister_subscriber(chat_id)
         except Exception as e:
             logger.warning(f"Failed to notify chat {chat_id}: {e}")
 
 async def schedule_monitor_loop(bot: Bot):
     """
-    Periodic background loop that monitors Google Drive folder.
+    Періодичний моніторинг папки на Google Drive.
     """
     logger.info(f"Starting schedule monitor loop (interval: {CHECK_INTERVAL_SECONDS}s)...")
     while True:
@@ -59,10 +177,11 @@ async def schedule_monitor_loop(bot: Bot):
                 logger.info(f"Schedule update detected: {meta['title']}")
                 await download_and_parse_schedule(meta["file_id"])
                 save_schedule_meta(meta)
-                await notify_subscribers(bot, meta)
+                reload_cached_schedule()
+                await notify_schedule_update(bot, meta)
         except asyncio.CancelledError:
             logger.info("Schedule monitor loop cancelled.")
             break
         except Exception as e:
             logger.error(f"Error in monitor loop: {e}", exc_info=True)
-            await asyncio.sleep(60)  # retry wait on error
+            await asyncio.sleep(60)

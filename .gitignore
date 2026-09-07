@@ -1,28 +1,53 @@
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+
+# Virtual Environments
 env/
 venv/
 ENV/
 .venv/
+env.bak/
+venv.bak/
 
-# Config & secrets
+# Environment Variables & Secrets
 .env
+.env.local
+.env.*.local
+!.env.example
 
-# Data cache
+# User Data & Runtime Downloads
+data/subscribers.json
 data/*.docx
-data/schedule_latest.docx
 
-# Temp / test
+# Logs
+*.log
+logs/
+
+# Operating System
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE & Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Temporary test & debug scripts
 *.bin
-*.html
-*.txt
-c1.docx
+*.tmp
 check_folders.py
 week_test.py
 parse_test.py
 rz263_detailed.json
 parsed_week_test.json
+c1.docx
+
+# Exceptions
+!requirements.txt

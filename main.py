@@ -9,7 +9,8 @@ from config import BOT_TOKEN, GROUP_NAME, SCHEDULE_FILE
 from parser.monitor import fetch_latest_schedule_meta, save_schedule_meta
 from parser.schedule_parser import download_and_parse_schedule, load_schedule
 from bot.handlers import router
-from bot.scheduler import schedule_monitor_loop
+from bot.scheduler import schedule_monitor_loop, lesson_alert_loop
+from bot.utils import get_cached_schedule, reload_cached_schedule
 
 logging.basicConfig(
     level=logging.INFO,
@@ -23,6 +24,7 @@ logger = logging.getLogger("main")
 async def ensure_initial_schedule():
     """
     Checks if schedule is already parsed. If not, fetches from Google Drive.
+    Warms up in-memory cache.
     """
     if not SCHEDULE_FILE.exists() or not load_schedule():
         logger.info("Schedule not found locally. Fetching initial schedule from Google Drive...")
@@ -30,9 +32,12 @@ async def ensure_initial_schedule():
         if meta:
             await download_and_parse_schedule(meta["file_id"])
             save_schedule_meta(meta)
+            reload_cached_schedule()
             logger.info("Initial schedule successfully loaded and cached!")
         else:
             logger.warning("Could not fetch initial schedule meta from Google Drive.")
+    else:
+        get_cached_schedule()
 
 async def main():
     # Initial data check
@@ -62,14 +67,17 @@ async def main():
     dp = Dispatcher()
     dp.include_router(router)
 
-    # Launch background schedule monitor
+    # Launch background tasks: schedule monitor and lesson alerts
     monitor_task = asyncio.create_task(schedule_monitor_loop(bot))
+    alert_task = asyncio.create_task(lesson_alert_loop(bot))
 
     logger.info(f"Telegram-бот для групи {GROUP_NAME} запущено!")
     try:
         await dp.start_polling(bot)
     finally:
         monitor_task.cancel()
+        alert_task.cancel()
+        await asyncio.gather(monitor_task, alert_task, return_exceptions=True)
         await bot.session.close()
 
 if __name__ == "__main__":

@@ -28,6 +28,7 @@ FACULTY_URL = os.getenv("FACULTY_URL", "https://op.edu.ua/studies/iibrt")
 GDRIVE_FOLDER_ID = os.getenv("GDRIVE_FOLDER_ID", "1Jlt45-PyFNJjfbNw1UVHWQ9GxzT5xizo")
 SEMESTER_START = os.getenv("SEMESTER_START", "2026-08-31")  # Понеділок 1-го тижня
 CHECK_INTERVAL_SECONDS = int(os.getenv("CHECK_INTERVAL_SECONDS", "1800"))
+ALERT_MINUTES_BEFORE = int(os.getenv("ALERT_MINUTES_BEFORE", "10"))
 
 SCHEDULE_FILE = DATA_DIR / "schedule.json"
 META_FILE = DATA_DIR / "meta.json"
