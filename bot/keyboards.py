@@ -1,8 +1,13 @@
-from datetime import date, timedelta
+from datetime import date
 from aiogram.types import (
     ReplyKeyboardRemove,
     InlineKeyboardMarkup,
     InlineKeyboardButton
+)
+from bot.transfers import (
+    get_prev_study_day,
+    get_next_study_day,
+    get_week_study_days
 )
 
 def get_remove_keyboard() -> ReplyKeyboardRemove:
@@ -14,28 +19,12 @@ def get_remove_keyboard() -> ReplyKeyboardRemove:
 def get_day_navigation_keyboard(target_date: date) -> InlineKeyboardMarkup:
     """
     Генерує інлайн-навігацію розкладу:
-    - Стрілки: день назад / день вперед (з автоматичним пропуском вихідних).
-    - Кнопки робочих днів тижня (Пн - Пт) із позначкою активного дня.
+    - Стрілки: день назад / день вперед (з автоматичним урахуванням робочих субот).
+    - Кнопки робочих днів тижня (Пн - Пт або Пн - Сб, якщо є робоча субота).
     - Кнопка повернення до сьогоднішнього дня.
     """
-    weekday = target_date.weekday()
-
-    # Розрахунок переходів між робочими днями
-    if weekday == 0:  # Понеділок -> назад у п'ятницю минулого тижня
-        prev_date = target_date - timedelta(days=3)
-        next_date = target_date + timedelta(days=1)
-    elif weekday == 4:  # П'ятниця -> вперед у понеділок наступного тижня
-        prev_date = target_date - timedelta(days=1)
-        next_date = target_date + timedelta(days=3)
-    elif weekday == 5:  # Субота
-        prev_date = target_date - timedelta(days=1)
-        next_date = target_date + timedelta(days=2)
-    elif weekday == 6:  # Неділя
-        prev_date = target_date - timedelta(days=2)
-        next_date = target_date + timedelta(days=1)
-    else:  # Вівторок, Середа, Четвер
-        prev_date = target_date - timedelta(days=1)
-        next_date = target_date + timedelta(days=1)
+    prev_date = get_prev_study_day(target_date)
+    next_date = get_next_study_day(target_date)
 
     # Рядок 1: Стрілки
     row_arrows = [
@@ -49,13 +38,11 @@ def get_day_navigation_keyboard(target_date: date) -> InlineKeyboardMarkup:
         )
     ]
 
-    # Рядок 2: Кнопки днів тижня (Пн - Пт)
-    monday = target_date - timedelta(days=weekday if weekday < 5 else 0)
-    day_labels = ["Пн", "Вт", "Ср", "Чт", "Пт"]
+    # Рядок 2: Кнопки навчальних днів поточного тижня (динамічно Пн-Пт або Пн-Сб)
+    study_days = get_week_study_days(target_date)
     row_days = []
 
-    for i, label in enumerate(day_labels):
-        day_date = monday + timedelta(days=i)
+    for label, day_date in study_days:
         is_active = (day_date == target_date)
         btn_text = f"• {label} •" if is_active else label
         row_days.append(

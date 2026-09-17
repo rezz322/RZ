@@ -30,6 +30,8 @@ from bot.utils import (
     unregister_subscriber
 )
 
+from bot.transfers import is_working_saturday, get_day_transfer, is_vacated_date
+
 logger = logging.getLogger(__name__)
 
 LESSON_TIMES = [
@@ -40,7 +42,13 @@ LESSON_TIMES = [
     {"pair": "5", "start": "15:20", "end": "16:55"}
 ]
 
-async def broadcast_lesson_alert(bot: Bot, pair_num: str, time_info: dict, lessons: list[dict]):
+async def broadcast_lesson_alert(
+    bot: Bot,
+    pair_num: str,
+    time_info: dict,
+    lessons: list[dict],
+    transfer_note: str | None = None
+):
     """
     Розсилає сповіщення про початок пари всім підписникам.
     """
@@ -48,7 +56,13 @@ async def broadcast_lesson_alert(bot: Bot, pair_num: str, time_info: dict, lesso
     if not subscribers:
         return
 
-    text = format_lesson_alert_text(pair_num, time_info, lessons, ALERT_MINUTES_BEFORE)
+    text = format_lesson_alert_text(
+        pair_num,
+        time_info,
+        lessons,
+        ALERT_MINUTES_BEFORE,
+        transfer_note=transfer_note
+    )
     logger.info(f"Broadcasting lesson alert for pair {pair_num} to {len(subscribers)} subscribers...")
 
     for chat_id in subscribers:
@@ -81,6 +95,7 @@ async def broadcast_lesson_alert(bot: Bot, pair_num: str, time_info: dict, lesso
 async def lesson_alert_loop(bot: Bot):
     """
     Фоновий цикл перевірки початку пар та надсилання нагадувань усім студентам за 10 хвилин.
+    Враховує робочі суботи та звільнені дні.
     """
     logger.info(f"Starting lesson alert loop (alerts ~{ALERT_MINUTES_BEFORE}m before pair)...")
     sent_alerts = set()
@@ -95,16 +110,33 @@ async def lesson_alert_loop(bot: Bot):
             # Очищуємо історію попередніх днів
             sent_alerts = {item for item in sent_alerts if item[0] == today_str}
 
-            # Пропускаємо вихідні дні (субота = 5, неділя = 6)
-            if today.weekday() >= 5:
+            # Пропускаємо неділю (6) та звичайні неробочі суботи (5)
+            if today.weekday() == 6:
+                continue
+            if today.weekday() == 5 and not is_working_saturday(today):
+                continue
+
+            # Пропускаємо дні, з яких пари були перенесені на суботи (екзаменаційна сесія)
+            if is_vacated_date(today):
                 continue
 
             schedule = get_cached_schedule()
             if not schedule:
                 continue
 
-            week_info = get_academic_week_info(today)
-            day_name = week_info["day_name"]
+            transfer_info = get_day_transfer(today)
+            if transfer_info:
+                day_name = transfer_info["target_day_name"]
+                target_week_number = transfer_info["week_number"]
+                target_parity = transfer_info["parity"]
+                transfer_note = transfer_info.get("note")
+            else:
+                week_info = get_academic_week_info(today)
+                day_name = week_info["day_name"]
+                target_week_number = week_info["week_number"]
+                target_parity = week_info["parity"]
+                transfer_note = None
+
             day_pairs = schedule.get("days", {}).get(day_name, {})
 
             for item in LESSON_TIMES:
@@ -115,8 +147,8 @@ async def lesson_alert_loop(bot: Bot):
                 raw_lessons = day_pairs.get(pair_num, [])
                 active_lessons = filter_lessons_for_week(
                     raw_lessons,
-                    week_info["week_number"],
-                    week_info["parity"]
+                    target_week_number,
+                    target_parity
                 )
                 if not active_lessons:
                     continue
@@ -128,7 +160,7 @@ async def lesson_alert_loop(bot: Bot):
                 if alert_dt <= now < start_dt:
                     logger.info(f"Triggering lesson alert for pair {pair_num} on {today_str}")
                     sent_alerts.add((today_str, pair_num))
-                    await broadcast_lesson_alert(bot, pair_num, item, active_lessons)
+                    await broadcast_lesson_alert(bot, pair_num, item, active_lessons, transfer_note=transfer_note)
 
         except asyncio.CancelledError:
             logger.info("Lesson alert loop cancelled.")

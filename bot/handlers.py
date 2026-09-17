@@ -29,6 +29,7 @@ from bot.utils import (
     register_subscriber
 )
 from bot.scheduler import LESSON_TIMES
+from bot.transfers import get_day_transfer, get_vacated_info
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -36,23 +37,46 @@ router = Router()
 async def render_schedule_message(target_date: date) -> tuple[str, any]:
     """
     Підготовлює текст розкладу та навігаційну інлайн-клавіатуру з пам'яті (0ms).
+    Враховує перенесення занять на робочі суботи та звільнені дні.
     """
     schedule = get_cached_schedule()
     if not schedule:
         return format_no_schedule_text(), None
 
     week_info = get_academic_week_info(target_date)
-    day_name = week_info["day_name"]
-    pairs = schedule.get("days", {}).get(day_name, {})
+    transfer_info = get_day_transfer(target_date)
+    vacated_info = get_vacated_info(target_date)
+
+    if transfer_info:
+        day_name = "СУБОТА"
+        lookup_day = transfer_info["target_day_name"]
+        pairs = schedule.get("days", {}).get(lookup_day, {})
+        week_num = transfer_info["week_number"]
+        parity = transfer_info["parity"]
+        parity_ua = transfer_info["parity_ua"]
+    elif vacated_info:
+        day_name = week_info["day_name"]
+        pairs = {}
+        week_num = week_info["week_number"]
+        parity = week_info["parity"]
+        parity_ua = week_info["parity_ua"]
+    else:
+        day_name = week_info["day_name"]
+        pairs = schedule.get("days", {}).get(day_name, {})
+        week_num = week_info["week_number"]
+        parity = week_info["parity"]
+        parity_ua = week_info["parity_ua"]
 
     text = format_day_schedule_text(
         target_date=target_date,
         day_name=day_name,
         pairs_dict=pairs,
-        week_num=week_info["week_number"],
-        parity=week_info["parity"],
-        parity_ua=week_info["parity_ua"],
-        filter_func=filter_lessons_for_week
+        week_num=week_num,
+        parity=parity,
+        parity_ua=parity_ua,
+        filter_func=filter_lessons_for_week,
+        transfer_info=transfer_info,
+        vacated_info=vacated_info
     )
     markup = get_day_navigation_keyboard(target_date)
     return text, markup

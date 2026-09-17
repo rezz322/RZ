@@ -156,22 +156,41 @@ def format_day_schedule_text(
     week_num: int,
     parity: str,
     parity_ua: str,
-    filter_func=None
+    filter_func=None,
+    transfer_info: dict | None = None,
+    vacated_info: dict | None = None
 ) -> str:
     """
     Форматує повний текст розкладу на день у HTML.
+    Підтримує робочі суботи та звільнені дні (перенесення занять).
     """
     date_formatted = target_date.strftime("%d.%m.%Y")
-    header = (
-        f"📅 <b>{day_name}</b>, <code>{date_formatted}</code>\n"
-        f"ℹ️ <b>{week_num}-й тиждень</b> ({parity_ua})\n"
-    )
 
-    if day_name in ["СУБОТА", "НЕДІЛЯ"]:
+    if transfer_info:
+        header = (
+            f"📅 <b>{day_name}</b>, <code>{date_formatted}</code>\n"
+            f"ℹ️ <b>{week_num}-й тиждень</b> ({parity_ua})\n"
+            f"🔄 <b>{transfer_info['note']}</b>\n"
+            f"📜 <i>{transfer_info.get('order_hint', 'Згідно з наказом ректора')}</i>\n"
+        )
+    else:
+        header = (
+            f"📅 <b>{day_name}</b>, <code>{date_formatted}</code>\n"
+            f"ℹ️ <b>{week_num}-й тиждень</b> ({parity_ua})\n"
+        )
+
+    if vacated_info:
+        return (
+            f"{header}\n"
+            f"🏖 <b>Аудиторних занять немає!</b>\n\n"
+            f"🔄 <i>{vacated_info['reason']}</i>"
+        )
+
+    if day_name in ["СУБОТА", "НЕДІЛЯ"] and not transfer_info:
         return (
             f"{header}\n"
             f"🏖 <i>Вихідний день! Занять немає.</i>\n\n"
-            f"👉 <i>Скористайтеся стрілками або кнопками нижче для перегляду робочих днів (Пн–Пт).</i>"
+            f"👉 <i>Скористайтеся стрілками або кнопками нижче для перегляду робочих днів.</i>"
         )
 
     msg = [header]
@@ -198,14 +217,25 @@ def format_day_schedule_text(
 
     return "\n".join(msg).strip()
 
-def format_lesson_alert_text(pair_num: str, time_info: dict, lessons: list[dict], minutes_left: int = 10) -> str:
+def format_lesson_alert_text(
+    pair_num: str,
+    time_info: dict,
+    lessons: list[dict],
+    minutes_left: int = 10,
+    transfer_note: str | None = None
+) -> str:
     """
     Форматує повідомлення-нагадування про початок пари за 10 хвилин з персоналізованими посиланнями викладачів.
     """
     msg = [
         f"🔔 <b>УВАГА! Через {minutes_left} хв розпочнеться {pair_num} пара!</b>",
-        f"⏰ Час: <b>{time_info['start']} – {time_info['end']}</b>\n"
+        f"⏰ Час: <b>{time_info['start']} – {time_info['end']}</b>"
     ]
+
+    if transfer_note:
+        msg.append(f"🔄 <i>{transfer_note}</i>")
+
+    msg.append("")
 
     for l in lessons:
         msg.append(format_lesson_entry_html(l))
