@@ -127,9 +127,10 @@ async def lesson_alert_loop(bot: Bot):
             transfer_info = get_day_transfer(today)
             if transfer_info:
                 day_name = transfer_info["target_day_name"]
-                target_week_number = transfer_info["week_number"]
-                target_parity = transfer_info["parity"]
-                transfer_note = transfer_info.get("note")
+                target_info = get_academic_week_info(transfer_info["target_date"])
+                target_week_number = target_info["week_number"]
+                target_parity = target_info["parity"]
+                transfer_note = None
             else:
                 week_info = get_academic_week_info(today)
                 day_name = week_info["day_name"]

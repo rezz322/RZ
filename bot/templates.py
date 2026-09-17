@@ -167,12 +167,7 @@ def format_day_schedule_text(
     date_formatted = target_date.strftime("%d.%m.%Y")
 
     if transfer_info:
-        header = (
-            f"📅 <b>{day_name}</b>, <code>{date_formatted}</code>\n"
-            f"ℹ️ <b>{week_num}-й тиждень</b> ({parity_ua})\n"
-            f"🔄 <b>{transfer_info['note']}</b>\n"
-            f"📜 <i>{transfer_info.get('order_hint', 'Згідно з наказом ректора')}</i>\n"
-        )
+        header = f"📅 <b>{day_name}</b>, <code>{date_formatted}</code>\n"
     else:
         header = (
             f"📅 <b>{day_name}</b>, <code>{date_formatted}</code>\n"

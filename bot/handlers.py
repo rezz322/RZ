@@ -51,9 +51,10 @@ async def render_schedule_message(target_date: date) -> tuple[str, any]:
         day_name = "СУБОТА"
         lookup_day = transfer_info["target_day_name"]
         pairs = schedule.get("days", {}).get(lookup_day, {})
-        week_num = transfer_info["week_number"]
-        parity = transfer_info["parity"]
-        parity_ua = transfer_info["parity_ua"]
+        target_info = get_academic_week_info(transfer_info["target_date"])
+        week_num = target_info["week_number"]
+        parity = target_info["parity"]
+        parity_ua = target_info["parity_ua"]
     elif vacated_info:
         day_name = week_info["day_name"]
         pairs = {}
