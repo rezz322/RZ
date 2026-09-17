@@ -1,5 +1,7 @@
 from datetime import date
 from aiogram.types import (
+    ReplyKeyboardMarkup,
+    KeyboardButton,
     ReplyKeyboardRemove,
     InlineKeyboardMarkup,
     InlineKeyboardButton
@@ -9,6 +11,19 @@ from bot.transfers import (
     get_next_study_day,
     get_week_study_days
 )
+
+def get_main_reply_keyboard() -> ReplyKeyboardMarkup:
+    """
+    Повертає постійну нижню Reply-клавіатуру з кнопкою для швидкого перегляду розкладу.
+    """
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📅 Розклад")]
+        ],
+        resize_keyboard=True,
+        is_persistent=True,
+        input_field_placeholder="Натисніть «📅 Розклад» або оберіть дію..."
+    )
 
 def get_remove_keyboard() -> ReplyKeyboardRemove:
     """

@@ -17,7 +17,11 @@ from parser.monitor import (
     has_schedule_changed,
     save_schedule_meta
 )
-from bot.keyboards import get_day_navigation_keyboard, get_remove_keyboard
+from bot.keyboards import (
+    get_day_navigation_keyboard,
+    get_remove_keyboard,
+    get_main_reply_keyboard
+)
 from bot.templates import (
     format_day_schedule_text,
     format_lesson_alert_text,
@@ -83,18 +87,21 @@ async def render_schedule_message(target_date: date) -> tuple[str, any]:
     return text, markup
 
 @router.message(CommandStart())
-@router.message(Command("today"))
-@router.message(Command("schedule"))
-@router.message(F.text.in_(["Розклад", "розклад"]))
-async def cmd_start_and_schedule(message: Message):
+@router.message(Command("menu"))
+async def cmd_start(message: Message):
     """
-    Миттєво показує розклад на сьогодні за 1 запит без зайвих мережевих затримок.
+    Вітання, закріплення постійної Reply-клавіатури та вивід розкладу на сьогодні.
     """
     user = message.from_user
     register_subscriber(
         message.chat.id,
         username=user.username if user else None,
         full_name=user.full_name if user else None
+    )
+    await message.answer(
+        "👋 Вітаю! Нижче додано зручну кнопку <b>«📅 Розклад»</b> для швидкого перегляду занять.",
+        reply_markup=get_main_reply_keyboard(),
+        parse_mode="HTML"
     )
     today = date.today()
     text, markup = await render_schedule_message(today)
@@ -105,10 +112,12 @@ async def cmd_start_and_schedule(message: Message):
         link_preview_options=LinkPreviewOptions(is_disabled=True)
     )
 
-@router.message(F.text == "📅 Розклад по днях")
-async def cmd_old_button_cleanup(message: Message):
+@router.message(F.text.in_(["📅 Розклад", "Розклад", "розклад", "📅 Розклад по днях", "📅 Розклад занять", "📅 Сьогодні"]))
+@router.message(Command("today"))
+@router.message(Command("schedule"))
+async def cmd_schedule(message: Message):
     """
-    Обробник для старої клавіатури: показує розклад та прибирає збережену клавіатуру.
+    Миттєво надсилає розклад при натисканні на кнопку або команду.
     """
     user = message.from_user
     register_subscriber(
@@ -116,12 +125,6 @@ async def cmd_old_button_cleanup(message: Message):
         username=user.username if user else None,
         full_name=user.full_name if user else None
     )
-    try:
-        rm = await message.answer("🗓 Оновлення...", reply_markup=get_remove_keyboard())
-        await rm.delete()
-    except Exception:
-        pass
-
     today = date.today()
     text, markup = await render_schedule_message(today)
     await message.answer(
@@ -251,4 +254,29 @@ async def cmd_test_alert(message: Message):
         f"<i>[ТЕСТОВЕ СПОВІЩЕННЯ]</i>\n\n{alert_text}",
         parse_mode="HTML",
         disable_web_page_preview=True
+    )
+
+@router.message(F.text)
+async def fallback_text_handler(message: Message):
+    """
+    Для будь-яких інших текстових повідомлень показує розклад та оновлює нижню клавіатуру.
+    """
+    user = message.from_user
+    register_subscriber(
+        message.chat.id,
+        username=user.username if user else None,
+        full_name=user.full_name if user else None
+    )
+    await message.answer(
+        "👋 Скористайтеся кнопкою <b>«📅 Розклад»</b> нижче для швидкого перегляду занять:",
+        reply_markup=get_main_reply_keyboard(),
+        parse_mode="HTML"
+    )
+    today = date.today()
+    text, markup = await render_schedule_message(today)
+    await message.answer(
+        text,
+        reply_markup=markup,
+        parse_mode="HTML",
+        link_preview_options=LinkPreviewOptions(is_disabled=True)
     )
